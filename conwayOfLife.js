@@ -2,26 +2,32 @@ const { createCanvas } = require('canvas');
 const fs = require('fs');
 const path = require('path');
 
-const cellSize = 28;  // You can modify this to control the cell size doesn't work very well with all values
+const smth = 15;  // You can modify this to control the cell size
+const cellSize = smth; // Cell size should match the smth value
 
-//The lines after these are color palettes that I picked which they are not the best I am not an artist
+function getRandomIntInRange(min, max) {
+return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+var allThePallets=[
+    ['rgb(17, 17, 17)' , 'rgb(122, 28, 172)'] ,     //0-blackPurple main
+    ['rgb(0, 0, 0)', 'rgb(235, 211, 248)'],         //1 blackWhite
+    ['rgb(18, 48, 174)', 'rgb(255, 247, 247)'],     //2 blueWhite
+    ['rgb(59, 48, 48)', 'rgb(102, 67, 67)'],        //3 diarrhea
+    ['rgb(102, 67, 67)' , 'rgb(59, 48, 48)'],       //4 reverse diarrhea
+    ['rgb(0,0,0)' , 'rgb(175, 30, 0)']              //5 blackRed
+]
 
-//const deadColor = 'rgb(0, 0, 0)'; 
-//const aliveColor = 'rgb(235, 211, 248)'; 
 
-const deadColor = 'rgb(17, 17, 17)'; 
-const aliveColor = 'rgb(122, 28, 172)'; 
 
-//const deadColor = 'rgb(18, 48, 174)'; 
-//const aliveColor = 'rgb(255, 247, 247)'; 
+//var decidedColor=getRandomIntInRange(0,allThePallets.length-1); //UNCOMMENT TO ACTIVATE RANDOMIZE 
+var decidedColor=0;                                              // COMMENT OUT THIS LINE AFTER ACTIVATING RANDOMIZER
 
-//const aliveColor = 'rgb(102, 67, 67)'; 
-//const deadColor = 'rgb(59, 48, 48)';
+var deadColor = allThePallets[decidedColor][0]; 
+var aliveColor = allThePallets[decidedColor][1]; 
 
-//const deadColor = 'rgb(102, 67, 67)'; 
-//const aliveColor = 'rgb(59, 48, 48)';
 
-const screenWidth = 1920; //your screen resolution
+
+const screenWidth = 1920; 
 const screenHeight = 1080; 
 
 const width = Math.floor(screenWidth / cellSize) * cellSize; // this was an attempt to make every value 
@@ -35,16 +41,15 @@ const rows = Math.floor(height / cellSize);
 const cols = Math.floor(width / cellSize);
 
 let grid = createGrid();
-let gameStarted = true; //will implement these later
-let gamePaused = false;
-let frame = 0;
-let resetTime=100; //after hundreds of iterations game might become stale so this value creates a brand new canvas
-                    //with 500 milliseconds intervals every 50 seconds a new grid is created newCycle=resetTime*intervalTime
-let currentTime=0;
+
+
+let resetTime=2000;  //after hundreds of iterations game might become stale so this value creates a brand new canvas
+let currentTime=0;  //with 500 milliseconds intervals every 50 seconds a new grid is created newCycle=resetTime*intervalTime
+
 
 // Create a grid with random alive (1) and dead (0) cells
 function createGrid() {
-    const aliveProbability = 0.3; // Adjust the probability of alive cells (0.3 = 30% alive)
+    const aliveProbability = 0.4; // Adjust the probability of alive cells (0.3 = 30% alive)
     return new Array(rows).fill(null).map(() => 
         new Array(cols).fill(null).map(() => Math.random() < aliveProbability ? 1 : 0)
     );
@@ -63,7 +68,7 @@ function drawGrid() {
     }
 }
 
-//update the grid based on the Game of Life rules that you can find in the Readme.md
+// Function to update the grid based on the Game of Life rules
 function updateGrid() {
     let newGrid = createGrid();
 
@@ -83,7 +88,7 @@ function updateGrid() {
     grid = newGrid;
 }
 
-//count neighbors for each cell
+// Function to count neighbors for each cell
 function countNeighbors(grid, row, col) {
     const directions = [
         [-1, 0], [1, 0], [0, -1], [0, 1],
@@ -101,31 +106,28 @@ function countNeighbors(grid, row, col) {
     }, 0);
 }
 
-//save the current canvas state as a PNG file
+// Save the current canvas state as a PNG file
 function saveAsPNG() {
     const buffer = canvas.toBuffer('image/png');
     const filePath = path.join(process.env.HOME, 
-        'Desktop', 'deneme', 'desktopBackgroundConway', 'gameBackground', `game_frame_0.png`); //change it according to your PATH
+        'Desktop', 'background' , `game_frame_0.png`); //YOUR BACKGROUND PATH
     fs.writeFileSync(filePath, buffer);
     if(currentTime==resetTime){
         currentTime=0;
         grid=createGrid();
     }
-    //console.log(currentTime)
-   /*  this was an earlier idea before I realiased you can do all this with 1 image
-    if(frame==20){
-        frame=0;
-    }*/
+
 }
 
+// Main game loop
 function gameLoop() {
-    if (!gamePaused) { //will find a way to pause the state in the future. Possible, maybe
+    
         drawGrid();
         updateGrid();
         saveAsPNG();
-       // frame++;
-       currentTime++; 
-    }
+       currentTime++;
+    
 }
 
-setInterval(gameLoop, 500);  // adjust the interval in milliseconds
+// Set interval to update and save PNGs
+setInterval(gameLoop, 500);  // Adjust the interval (1000ms = 1 second)
